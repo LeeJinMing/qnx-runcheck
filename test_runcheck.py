@@ -18,8 +18,10 @@ class RuncheckTest(unittest.TestCase):
             if "cat > " in command[-1]:
                 self.assertEqual(options["stdin"].read(), b"test executable")
             return result
+        self.stdout = io.StringIO()
+        self.stderr = io.StringIO()
         with patch("sys.argv", argv), patch("runcheck.subprocess.run", side_effect=simulate) as invoke, \
-                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                contextlib.redirect_stdout(self.stdout), contextlib.redirect_stderr(self.stderr):
             try:
                 status = runcheck.main()
             except SystemExit as error:
@@ -43,6 +45,8 @@ class RuncheckTest(unittest.TestCase):
         self.assertIn("-T", commands[3])
         self.assertEqual(commands[3][-1], "umask 077; cat > /tmp/qnx-runcheck.AbC12345/probe")
         self.assertIn("chmod 700 /tmp/qnx-runcheck.AbC12345/probe", commands[4][-1])
+        self.assertIn("[target] OK QNX 8.0.0 x86_64", self.stdout.getvalue())
+        self.assertIn("[workspace] OK", self.stdout.getvalue())
 
     def test_compiler_error_never_contacts_target(self):
         status, commands = self.invoke([self.response(1, stderr="invalid source")])
@@ -58,6 +62,18 @@ class RuncheckTest(unittest.TestCase):
         status, commands = self.invoke([self.response(), self.response(stdout="Linux\n8.0\nx86_64\n")])
         self.assertEqual(status, 20)
         self.assertEqual(len(commands), 2)
+        self.assertNotIn("[target] OK", self.stdout.getvalue())
+        self.assertIn("Expected QNX 8", self.stderr.getvalue())
+
+    def test_unexpected_workspace_path_never_gets_upload(self):
+        status, commands = self.invoke([
+            self.response(), self.response(stdout="QNX\n8.0.0\nx86_64\n"),
+            self.response(stdout="/tmp/unrelated\n"),
+        ])
+        self.assertEqual(status, 30)
+        self.assertEqual(len(commands), 3)
+        self.assertNotIn("[workspace] OK", self.stdout.getvalue())
+        self.assertIn("Unexpected temporary directory path", self.stderr.getvalue())
 
     def test_failed_upload_cleans_up_without_running_probe(self):
         status, commands = self.invoke([

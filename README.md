@@ -26,4 +26,6 @@ For real target evidence, record the QNX guest's OS and architecture, the QEMU v
 | Guest running, `printf 'int main( {\n' > /tmp/qnx-runcheck-invalid.c` and pass that file as the positional argument | qcc reports a compile error before any SSH step. Exit 10. |
 | Test guest fully stopped, included probe | Build succeeds, then SSH reports that it cannot connect to the guest. Exit 20. |
 
+The CLI marks the target stage successful after verifying the returned OS, release and processor architecture. It marks the workspace stage successful after verifying the temporary directory path.
+
 Run the failure cases on a disposable test guest. The MIT license covers Runcheck's source files. Install the QNX SDK and target image separately under your QNX license.

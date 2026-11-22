@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 
-def step(label, command, timeout, failure, *, quiet=False, stdin=None):
+def step(label, command, timeout, failure, *, report_success=True, stdin=None):
     try:
         process = subprocess.run(command, stdin=stdin, capture_output=True, text=True,
                                  errors="replace", timeout=timeout, check=False)
@@ -19,9 +19,10 @@ def step(label, command, timeout, failure, *, quiet=False, stdin=None):
         diagnostic = process.stderr.strip() or process.stdout.strip()
         print(f"[{label}] Exit {process.returncode}: {diagnostic}", file=sys.stderr)
         raise SystemExit(failure)
-    if process.stdout and not quiet:
-        print(process.stdout.strip())
-    print(f"[{label}] OK")
+    if report_success:
+        if process.stdout:
+            print(process.stdout.strip(), flush=True)
+        print(f"[{label}] OK", flush=True)
     return process.stdout.strip()
 
 
@@ -54,7 +55,7 @@ def main():
         executable = Path(directory) / "probe"
         step("build", ["qcc", f"-V{profile}", "-Wall", "-Wextra", str(source), "-o", str(executable)],
              60, 10)
-        identity = step("target", [*ssh, "uname -s && uname -r && uname -p"], 12, 20, quiet=True)
+        identity = step("target", [*ssh, "uname -s && uname -r && uname -p"], 12, 20, report_success=False)
         identity_lines = identity.splitlines()
         machine_names = {"x86_64": {"x86_64", "amd64"}, "aarch64": {"aarch64", "aarch64le", "arm64"}}
         if (len(identity_lines) != 3 or identity_lines[0] != "QNX"
@@ -62,13 +63,14 @@ def main():
                 or identity_lines[2] not in machine_names[args.arch]):
             print(f"[target] Expected QNX 8 on {args.arch}. Received: {identity!r}", file=sys.stderr)
             return 20
-        print(f"[target] {' '.join(identity_lines)}")
+        print(f"[target] OK {' '.join(identity_lines)}", flush=True)
         # The login shell creates the executable in a unique, private directory on the VM.
         remote_dir = step("workspace", [*ssh, "umask 077; mktemp -d /tmp/qnx-runcheck.XXXXXXXX"],
-                          12, 30, quiet=True)
+                          12, 30, report_success=False)
         if not re.fullmatch(r"/tmp/qnx-runcheck\.[a-zA-Z0-9]+", remote_dir):
             print("[workspace] Unexpected temporary directory path.", file=sys.stderr)
             return 30
+        print("[workspace] OK", flush=True)
         remote_exe = f"{remote_dir}/probe"
         try:
             try:
