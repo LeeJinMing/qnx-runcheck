@@ -49,7 +49,9 @@ def main():
         hosts_path = args.known_hosts.resolve().as_posix()
         if any(char in hosts_path for char in ('"', "\\", "\n", "\r")):
             parser.error("Known hosts path cannot contain quotes, backslashes or line breaks.")
-        ssh.extend(["-o", f'UserKnownHostsFile="{hosts_path}"'])
+        if any(char.isspace() or char == "#" for char in hosts_path):
+            hosts_path = f'"{hosts_path}"'
+        ssh.extend(["-o", f"UserKnownHostsFile={hosts_path}"])
     ssh.append(args.target)
     with tempfile.TemporaryDirectory(prefix="qnx-runcheck-") as directory:
         executable = Path(directory) / "probe"
