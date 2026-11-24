@@ -4,7 +4,7 @@ Build a C file for QNX 8, check the VM's OS and architecture, copy the executabl
 
 **Verification status:** Verified against the official QNX 8.0.0 x86-64 QEMU Quick Start Target Image. The probe ran successfully, invalid C stopped at compilation, and a stopped VM reported a target connection failure.
 
-Follow the [three-checkpoint QNX 8 codelab](CODELAB.md) to reproduce and distinguish those outcomes.
+Follow the [three-checkpoint QNX 8 codelab](CODELAB.md) to reproduce and distinguish those outcomes. The [submitted guest recording (MP4)](https://raw.githubusercontent.com/LeeJinMing/qnx-runcheck/main/QNX-Runcheck-Demo.mp4) is also available to download.
 
 ## Run the check
 
