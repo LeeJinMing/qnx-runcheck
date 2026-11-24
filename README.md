@@ -4,6 +4,8 @@ Build a C file for QNX 8, check the VM's OS and architecture, copy the executabl
 
 **Verification status:** Verified against the official QNX 8.0.0 x86-64 QEMU Quick Start Target Image. The probe ran successfully, invalid C stopped at compilation, and a stopped VM reported a target connection failure.
 
+Follow the [three-checkpoint QNX 8 codelab](CODELAB.md) to reproduce and distinguish those outcomes.
+
 ## Run the check
 
 1. Obtain and deploy a [non-commercial QNX SDP 8.0 license](https://www.qnx.com/getqnx). In QNX Software Center, install the SDK and the `com.qnx.qnx800.quickstart.qemu` image package. Unpack the image, source `qnxsdp-env.sh`, and start the guest with `mkqnximage --run` from the image directory. Launch one of the official demos and confirm it starts. See the [official QEMU image guide](https://www.qnx.com/developers/docs/qnxeverywhere/com.qnx.doc.target_images/topic/qsti_qemu/getting_started.html).
